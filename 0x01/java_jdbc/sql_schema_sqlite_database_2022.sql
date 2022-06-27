@@ -1,8 +1,0 @@
--- TABLE
- 
--- INDEX
- 
--- TRIGGER
- 
--- VIEW
- 
