@@ -2,27 +2,43 @@ import java.sql.*;
 
 public class ClienteDAOImpl implements ClienteDAO{
 
+    private static Connection connection = null;
+
+
     @Override
     public Connection connect(String urlConexao) {
-        Connection connection = null;
         try {
-            String url = urlConexao;
-            connection = DriverManager.getConnection(url);
-            System.out.println("Connection to SQLite has been established.");
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException ex) {
-                System.out.println(ex.getMessage());
-            }
-        }
-        return connection;
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection(urlConexao);
 
+        } catch (SQLException e) {
+            System.err.println("Não foi possível conectar ao banco de dados: " + e.getMessage());
+        } catch (ClassNotFoundException e){
+            System.err.println("Ocorreu uma falha ao utilizar o driver: " + e.getMessage());
+        }
+
+        return connection;
     }
+//    public Connection connect(String urlConexao) {
+//
+//        try {
+//            String url = urlConexao;
+//            connection = DriverManager.getConnection(url);
+//            System.out.println("Connection to SQLite has been established.");
+//        } catch (SQLException e) {
+//            System.out.println(e.getMessage());
+//        } finally {
+//            try {
+//                if (connection != null) {
+//                    connection.close();
+//                }
+//            } catch (SQLException ex) {
+//                System.out.println(ex.getMessage());
+//            }
+//        }
+//        return connection;
+//
+//    }
 
 
     @Override
@@ -48,20 +64,35 @@ public class ClienteDAOImpl implements ClienteDAO{
 
     @Override
     public void insert(String  url_conexao, Cliente cliente) {
-        String sql = "INSERT INTO cliente(nome,idade, cpf, rg) VALUES(?,?,?,?)";
-        try (Connection conn = this.connect(url_conexao);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, cliente.getNome());
-            pstmt.setInt(2, cliente.getIdade());
-            pstmt.setString(3, cliente.getCpf());
-            pstmt.setString(4, cliente.getRg());
-            pstmt.executeUpdate();
+        try {
+            connection = connect(url_conexao);
+            Statement stm = connection.createStatement();
+            stm.executeUpdate("INSERT INTO cliente VALUES (" +
+                    cliente.getId() + ", " +
+                    "'" + cliente.getNome() + "', " +
+                    cliente.getIdade() + ", " +
+                    "'" + cliente.getCpf() + "', " +
+                    "'" + cliente.getRg() + "')"
+            );
+
+            stm.close();
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.err.println("Não foi possível inserir o cliente: " + e.getMessage());
         }
+//
+//
+//        String sql = "INSERT INTO cliente(nome,idade, cpf, rg) VALUES(?,?,?,?)";
+//        try (Connection conn = this.connect(url_conexao);
+//             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+//            pstmt.setString(1, cliente.getNome());
+//            pstmt.setInt(2, cliente.getIdade());
+//            pstmt.setString(3, cliente.getCpf());
+//            pstmt.setString(4, cliente.getRg());
+//            pstmt.executeUpdate();
+//        } catch (SQLException e) {
+//            System.out.println(e.getMessage());
+//        }
     }
-
-
 
     @Override
     public void selectAll(String urlConexao) {
@@ -82,7 +113,7 @@ public class ClienteDAOImpl implements ClienteDAO{
 
     @Override
     public void update(String urlConexao, int id, String nome, Integer idade) {
-        String sql = "UPDATE cliente SET nome = ? , + idade = ?    WHERE id = ?";
+        String sql = "UPDATE cliente SET nome = ? ,  idade = ?    WHERE id = ?";
         try (Connection conn = this.connect(urlConexao);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, nome);
